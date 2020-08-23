@@ -1,0 +1,70 @@
+version: "3.7"
+
+services:
+  api:
+    image: devpies/gdr-api
+    secrets:
+      - postgres_db
+      - postgres_user
+      - postgres_host
+      - postgres_passwd
+    environment:
+      API_DB_DISABLE_TLS: "true"
+      API_WEB_PRODUCTION: "true"
+      API_WEB_ADDRESS: :4000
+      API_WEB_READ_TIMEOUT: 7s
+      API_WEB_WRITE_TIMEOUT: 7s
+      API_WEB_SHUTDOWN_TIMEOUT: 7s
+      API_WEB_FRONTEND_ADDRESS: https://gdr.ivorscott.com
+      POSTGRES_DB: /run/secrets/postgres_db
+      POSTGRES_USER: /run/secrets/postgres_user
+      POSTGRES_HOST: /run/secrets/postgres_host
+      POSTGRES_PASSWORD: /run/secrets/postgres_passwd
+    deploy:
+      labels:
+        - traefik.frontend.rule=Host:api.gdr.ivorscott.com
+        - traefik.enable=true
+        - traefik.port=4000
+        - traefik.tags=traefik-public
+        - traefik.docker.network=traefik-public
+        # Traefik service that listens to HTTP
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # Traefik service that listens to HTTPS
+        - traefik.webservice.frontend.entryPoints=https
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    networks:
+      - traefik-public
+
+  client:
+    image: devpies/gdr-client
+    deploy:
+      labels:
+        - traefik.frontend.rule=Host:gdr.ivorscott.com
+        - traefik.enable=true
+        - traefik.port=80
+        - traefik.tags=traefik-public
+        - traefik.docker.network=traefik-public
+        # Traefik service that listens to HTTP
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # Traefik service that listens to HTTPS
+        - traefik.webservice.frontend.entryPoints=https
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true
+
+secrets:
+  postgres_db:
+    external: true
+  postgres_host:
+    external: true
+  postgres_passwd:
+    external: true
+  postgres_user:
+    external: true

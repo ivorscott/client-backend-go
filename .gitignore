@@ -1,0 +1,9 @@
+**/*/.vscode/settings.json
+.vscode/settings.json
+/secrets
+/api/__debug_bin
+/api/tls/*
+.env
+main
+c.out
+coverage.html
