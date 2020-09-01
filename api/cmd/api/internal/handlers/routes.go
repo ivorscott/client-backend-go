@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ivorscott/go-delve-reload/internal/mid"
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
-	"github.com/ivorscott/go-delve-reload/internal/platform/web"
+	"github.com/ivorscott/devpie-client-backend-go/internal/mid"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
 	"github.com/rs/cors"
 )
 
-func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, FrontendAddress string) http.Handler {
+func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, FrontendAddress, Auth0Audience, Auth0Domain string) http.Handler {
+	auth := mid.Auth0{Audience: Auth0Audience, Domain: Auth0Domain}
 
 	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Panics(log))
 
@@ -33,5 +34,5 @@ func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, Fr
 	app.Handle(http.MethodPut, "/v1/products/{id}", p.Update)
 	app.Handle(http.MethodDelete, "/v1/products/{id}", p.Delete)
 
-	return c.Handler(app)
+	return c.Handler(auth.Authenticate(app))
 }

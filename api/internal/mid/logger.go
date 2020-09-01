@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ivorscott/go-delve-reload/internal/platform/web"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
 )
 
 // Logger writes some information about the request to the logs in the

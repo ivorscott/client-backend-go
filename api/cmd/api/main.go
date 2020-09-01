@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ivorscott/go-delve-reload/cmd/api/internal/handlers"
-	"github.com/ivorscott/go-delve-reload/internal/platform/conf"
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
-	"github.com/ivorscott/go-delve-reload/pkg/secrets"
+	"github.com/ivorscott/devpie-client-backend-go/cmd/api/internal/handlers"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/conf"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/pkg/secrets"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +27,7 @@ func main() {
 
 func run() error {
 
-	infolog := log.New(os.Stdout, "GO-DELVE-RELOAD: ", log.Lmicroseconds|log.Lshortfile)
+	infolog := log.New(os.Stdout, "devpie-client-backend-go: ", log.Lmicroseconds|log.Lshortfile)
 
 	// =========================================================================
 	// App Starting
@@ -47,6 +47,8 @@ func run() error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 			FrontendAddress string        `conf:"default:https://localhost:3000"`
+			Auth0Domain     string        `conf:"default:"`
+			Auth0Audience   string        `conf:"default:"`
 		}
 		DB struct {
 			User       string `conf:"default:postgres,noprint"`
@@ -135,7 +137,7 @@ func run() error {
 
 	api := http.Server{
 		Addr:         cfg.Web.Address,
-		Handler:      handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress),
+		Handler:      handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress, cfg.Web.Auth0Audience, cfg.Web.Auth0Domain),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		ErrorLog:     discardLog,

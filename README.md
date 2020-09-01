@@ -25,8 +25,8 @@
 ## Getting Started
 
 ```
-git clone https://github.com/ivorscott/go-delve-reload
-cd go-delve-reload
+git clone https://github.com/ivorscott/devpie-client-backend-go
+cd devpie-client-backend-go
 git checkout part5
 ```
 

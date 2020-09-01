@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
-	"github.com/ivorscott/go-delve-reload/internal/platform/web"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
 )
 
 // Healthcheck supports orchestration

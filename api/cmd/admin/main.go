@@ -7,9 +7,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/ivorscott/go-delve-reload/internal/platform/conf"
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
-	"github.com/ivorscott/go-delve-reload/internal/schema"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/conf"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/internal/schema"
 	"github.com/pkg/errors"
 )
 

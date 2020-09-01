@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/ivorscott/go-delve-reload/internal/platform/web"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
 	"github.com/pkg/errors"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
 	"github.com/pkg/errors"
 )
 

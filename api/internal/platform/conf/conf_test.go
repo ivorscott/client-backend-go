@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ivorscott/go-delve-reload/internal/platform/conf"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/conf"
 )
 
 const (

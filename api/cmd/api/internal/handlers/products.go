@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
-	"github.com/ivorscott/go-delve-reload/internal/platform/web"
-	"github.com/ivorscott/go-delve-reload/internal/product"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
+	"github.com/ivorscott/devpie-client-backend-go/internal/product"
 	"github.com/pkg/errors"
 )
 

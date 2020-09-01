@@ -16,6 +16,8 @@ x-api: &default-api
     API_WEB_WRITE_TIMEOUT: 7s
     API_WEB_SHUTDOWN_TIMEOUT: 7s
     API_WEB_FRONTEND_ADDRESS: $API_WEB_FRONTEND_ADDRESS
+    API_WEB_AUTH0_DOMAIN: $API_WEB_AUTH0_DOMAIN
+    API_WEB_AUTH0_AUDIENCE: $API_WEB_AUTH0_AUDIENCE
   volumes:
     - ./api:/api
   networks:
@@ -34,23 +36,6 @@ services:
     # swap commands to disable live reload
     # command: go run ./cmd/api
     command: CompileDaemon --build="go build -o main ./cmd/api" -log-prefix=false --command=./main
-
-  client:
-    build:
-      context: ./client
-      target: dev
-    environment:
-      HTTPS: "true"
-      REACT_APP_BACKEND: $REACT_APP_BACKEND
-      CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - $CLIENT_PORT:$CLIENT_PORT
-    # fixes bug in create-react-app https://bit.ly/3dVy3Uw
-    tty: true
-    stdin_open: true
-    volumes:
-      - ./client:/client/app
-      - /client/app/node_modules
 
   debug-api:
     <<: *default-api # insert resuble block

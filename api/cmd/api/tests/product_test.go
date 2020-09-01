@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/ivorscott/go-delve-reload/cmd/api/internal/handlers"
-	"github.com/ivorscott/go-delve-reload/internal/schema"
+	"github.com/ivorscott/devpie-client-backend-go/cmd/api/internal/handlers"
+	"github.com/ivorscott/devpie-client-backend-go/internal/schema"
 	_ "github.com/lib/pq"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/ivorscott/go-delve-reload/internal/platform/conf"
-	"github.com/ivorscott/go-delve-reload/internal/platform/database"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/conf"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
