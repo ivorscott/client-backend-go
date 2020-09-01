@@ -1,37 +1,3 @@
-# The Go and React Series
-
-## Deploying with Swarm and Traefik pt.5
-
-## Contents
-
-- Digital Ocean
-- Docker Hub
-- Docker Machine
-- Docker Swarm
-- Healthchecks
-- Traefik
-- Deployment
-
-### Requirements
-
-- VSCode
-- Docker
-- DockerHub Account
-- Digital Ocean Account
-- A Domain Name (Try Namecheap)
-- Docker Machine
-- Managed Database (ElephantSQL is Free)
-
-## Getting Started
-
-```
-git clone https://github.com/ivorscott/go-delve-reload
-cd go-delve-reload
-git checkout part5
-```
-
-Please review [Setting Up VSCode](/ultimate-go-react-development-setup-with-docker#go-modules) to avoid intellisense errors in VSCode. This occurs because the project is a mono repo and the Go module directory is not the project root.
-
 ### Usage
 
 1 - Copy .env.sample and rename it to .env
