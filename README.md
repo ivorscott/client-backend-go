@@ -9,6 +9,9 @@ The contents of .env should look like this:
 ```bash
 # ENVIRONMENT VARIABLES
 
+API_WEB_AUTH_DOMAIN=
+API_WEB_AUTH_AUDIENCE=
+
 API_PORT=4000
 PPROF_PORT=6060
 CLIENT_PORT=3000
