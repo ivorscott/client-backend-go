@@ -47,8 +47,8 @@ func run() error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 			FrontendAddress string        `conf:"default:https://localhost:3000"`
-			Auth0Domain     string        `conf:"default:"`
-			Auth0Audience   string        `conf:"default:"`
+			AuthDomain     string        `conf:"default:none,noprint"`
+			AuthAudience   string        `conf:"default:none,noprint"`
 		}
 		DB struct {
 			User       string `conf:"default:postgres,noprint"`
@@ -137,7 +137,7 @@ func run() error {
 
 	api := http.Server{
 		Addr:         cfg.Web.Address,
-		Handler:      handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress, cfg.Web.Auth0Audience, cfg.Web.Auth0Domain),
+		Handler:      handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress, cfg.Web.AuthAudience, cfg.Web.AuthDomain),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		ErrorLog:     discardLog,

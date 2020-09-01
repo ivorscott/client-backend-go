@@ -13,7 +13,6 @@ import (
 
 func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, FrontendAddress, Auth0Audience, Auth0Domain string) http.Handler {
 	auth := mid.Auth0{Audience: Auth0Audience, Domain: Auth0Domain}
-
 	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Panics(log))
 
 	c := cors.New(cors.Options{
