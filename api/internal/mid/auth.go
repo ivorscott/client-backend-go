@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	jwtmiddleware "github.com/auth/go-jwt-middleware"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 )
 
