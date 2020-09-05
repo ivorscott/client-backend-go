@@ -185,12 +185,14 @@ Another approach is to containerize only the client and database. Work with the 
 ```makefile
 # export environment variables individually
 export API_DB_DISABLE_TLS=true
-# or simply export everything in .env
-# export $(xargs <.env)
+export API_WEB_AUTH_DOMAIN=<INSERT-VALUE-HERE>
+export API_WEB_AUTH_AUDIENCE=<INSERT-VALUE-HERE>
+
 cd api
 go run ./cmd/api
+
 # or use cli flags
-# go run ./cmd/api --db-disable-tls=true
+# go run ./cmd/api --db-disable-tls=true --web-auth-domain=<INSERT-VALUE-HERE> --web-auth-audience=<INSERT-VALUE-HERE>
 ```
 
 ### Try it in Postman
