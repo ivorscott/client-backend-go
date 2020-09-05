@@ -183,9 +183,13 @@ In your browser, you may see a warning and need to click a link to proceed to th
 Another approach is to containerize only the client and database. Work with the API in an idiomatic fashion. This means without a container and with live reloading disabled. To configure the API, use command line flags or export environment variables.
 
 ```makefile
+# export environment variables individually
 export API_DB_DISABLE_TLS=true
+# or simply export everything in .env
+# export $(xargs <.env)
 cd api
 go run ./cmd/api
+# or use cli flags
 # go run ./cmd/api --db-disable-tls=true
 ```
 

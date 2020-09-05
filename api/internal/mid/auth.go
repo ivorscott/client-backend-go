@@ -36,7 +36,7 @@ type CustomClaims struct {
 // Authenticate middleware verifies the access token sent to the api
 func (auth0 *Auth0) Authenticate(next http.Handler) http.Handler {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		Debug: true,
+		Debug: false,
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(auth0.Audience, false)
 			if !checkAud {
