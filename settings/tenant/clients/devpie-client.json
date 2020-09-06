@@ -10,5 +10,5 @@
   "allowed_logout_urls": [
     "##ENVIRONMENT_URL##"
   ],
-  "app_type": "Single Page Application"
+  "app_type": "spa"
 }
