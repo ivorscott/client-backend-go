@@ -1,6 +1,6 @@
 {
-  "name": "facebook",
-  "strategy": "facebook",
+  "name": "google-oauth2",
+  "strategy": "google-oauth2",
   "enabled_clients": [
     "DevPie Client"
   ],
