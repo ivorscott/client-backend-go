@@ -2,7 +2,7 @@
   "name": "google-oauth2",
   "strategy": "google-oauth2",
   "enabled_clients": [
-    "7yOS0I5JdYxgFXCU0aiu7slqkCSN0x8V"
+    ""
   ],
   "options": {}
 }
