@@ -1,0 +1,8 @@
+{
+  "name": "facebook",
+  "strategy": "facebook",
+  "enabled_clients": [
+    "DevPie Client"
+  ],
+  "options": {}
+}
