@@ -1,18 +1,14 @@
 function SetAssignedRoles(user, context, callback) {
     const namespace = 'https://client.devpie.io/claims/roles';
-    const defaultRoles = context.idToken[namespace];
-    const assignedRoles = (context.authorization || {}).roles.push(defaultRoles.pop())
 
     let idTokenClaims = context.idToken || {};
-    let accessTokenClaims = context.accessToken || {};
 
-    idTokenClaims[namespace] = assignedRoles;
-    accessTokenClaims[namespace] = assignedRoles;
+    const assignedRoles = (context.authorization || {}).roles;
+    const defaultRoles = idTokenClaims[namespace] ? idTokenClaims[namespace] : [];
+    const combinedRoles = [...assignedRoles, ...defaultRoles];
 
-    context.idToken = idTokenClaims;
-    context.accessToken = accessTokenClaims;
+    context.idToken[namespace] = combinedRoles;
+    context.accessToken[namespace] = combinedRoles;
 
     callback(null, user, context);
 }
-
-
