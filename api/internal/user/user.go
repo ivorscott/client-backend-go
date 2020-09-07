@@ -55,11 +55,11 @@ func RetrieveMe(ctx context.Context, repo *database.Repository, id string) (*Use
 // Create adds a new Product
 func Create(ctx context.Context, repo *database.Repository, nu NewUser, now time.Time) (*User, error) {
 	u := User{
-		ID:          uuid.New().String(),
-		Auth0ID:        nu.Auth0ID,
-		Email:       nu.Email,
+		ID:      uuid.New().String(),
+		Auth0ID: nu.Auth0ID,
+		Email:   nu.Email,
 		Picture: nu.Picture,
-		Created:     now.UTC(),
+		Created: now.UTC(),
 	}
 
 	stmt := repo.SQ.Insert(
@@ -73,7 +73,7 @@ func Create(ctx context.Context, repo *database.Repository, nu NewUser, now time
 	})
 
 	if _, err := stmt.ExecContext(ctx); err != nil {
-		return nil, errors.Wrapf(err, "inserting product: %v", np)
+		return nil, errors.Wrapf(err, "inserting product: %v", nu)
 	}
 
 	return &u, nil
