@@ -3,11 +3,11 @@ package mid
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strings"
-
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
+	"net/http"
+	"strings"
 )
 
 type Auth0 struct {
@@ -34,34 +34,52 @@ type CustomClaims struct {
 }
 
 // Authenticate middleware verifies the access token sent to the api
-func (auth0 *Auth0) Authenticate(next http.Handler) http.Handler {
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		Debug: false,
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(auth0.Audience, false)
-			if !checkAud {
-				return token, errors.New("invalid audience.")
+func Authenticate(Audience, Domain string) web.Middleware {
+	// This is the actual middleware function to be executed.
+	f := func(after web.Handler) web.Handler {
+		// Create the handler that will be attached in the middleware chain.
+		h := func(w http.ResponseWriter, r *http.Request) error {
+
+			a0 := Auth0{Audience: Audience, Domain: Domain}
+
+			jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+				Debug: false,
+				ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+					checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(a0.Audience, false)
+					if !checkAud {
+						return token, errors.New("invalid audience.")
+					}
+					iss := "https://" + a0.Domain + "/"
+					checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+					if !checkIss {
+						return token, errors.New("invalid issuer.")
+					}
+					cert, err := GetPemCert(token, a0)
+					if err != nil {
+						return nil, err
+					}
+					return jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+				},
+				SigningMethod: jwt.SigningMethodRS256,
+			})
+
+			if err := jwtMiddleware.CheckJWT(w, r); err != nil {
+				return web.NewRequestError(err, http.StatusForbidden)
 			}
-			iss := "https://" + auth0.Domain + "/"
-			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
-			if !checkIss {
-				return token, errors.New("invalid issuer.")
-			}
-			cert, err := auth0.getPemCert(token)
-			if err != nil {
-				return nil, err
-			}
-			return jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-		},
-		SigningMethod: jwt.SigningMethodRS256,
-	})
-	return jwtMiddleware.Handler(next)
+
+			return after(w, r)
+		}
+
+		return h
+	}
+
+	return f
 }
 
 // CheckScope middleware verifies the Access Token has the correct scope before returning a successful response
-func (auth0 *Auth0) CheckScope(scope string, tokenString string) (bool, error) {
+func CheckScope(scope, tokenString string, a0 Auth0) (bool, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-		cert, err := auth0.getPemCert(token)
+		cert, err := GetPemCert(token, a0)
 		if err != nil {
 			return nil, err
 		}
@@ -86,9 +104,9 @@ func (auth0 *Auth0) CheckScope(scope string, tokenString string) (bool, error) {
 }
 
 // getPemCert takes a token and returns the associated certificate in PEM format so it can be parsed
-func (auth0 *Auth0) getPemCert(token *jwt.Token) (string, error) {
+func GetPemCert(token *jwt.Token, a0 Auth0) (string, error) {
 	cert := ""
-	resp, err := http.Get("https://" + auth0.Domain + "/.well-known/jwks.json")
+	resp, err := http.Get("https://" + a0.Domain + "/.well-known/jwks.json")
 	if err != nil {
 		return cert, err
 	}
