@@ -1,30 +1,32 @@
 package handlers
 
 import (
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
 	"github.com/ivorscott/devpie-client-backend-go/internal/user"
-	"github.com/pkg/errors"
 )
 
-// Products holds the application state needed by the handler methods.
+// Users holds the application state needed by the handler methods.
 type Users struct {
 	repo *database.Repository
 	log  *log.Logger
 }
 
 
-// Retrieve a single Product
+// Retrieve a single User
 func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
+	claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+	sub := fmt.Sprintf("%v",claims["sub"])
 
-	id := chi.URLParam(r, "id")
+	prod, err := user.RetrieveMe(r.Context(), u.repo, sub)
 
-	prod, err := user.RetrieveMe(r.Context(), u.repo, id)
 	if err != nil {
 		switch err {
 		case user.ErrNotFound:
@@ -32,14 +34,15 @@ func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
 		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "looking for products %q", id)
+			return errors.Wrapf(err, "looking for user %q", sub)
 		}
 	}
 
 	return web.Respond(r.Context(), w, prod, http.StatusOK)
+	return nil
 }
 
-// Create a new Product
+// Create a new User
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) error {
 
 	var nu user.NewUser

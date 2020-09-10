@@ -16,7 +16,7 @@ func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, Fr
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{FrontendAddress},
-		AllowedHeaders:   []string{"Authorization"},
+		AllowedHeaders:   []string{"Authorization", "Cache-Control", "Content-Type", "Strict-Transport-Security"},
 		AllowCredentials: true,
 	})
 
