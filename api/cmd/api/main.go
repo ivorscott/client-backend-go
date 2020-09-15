@@ -47,8 +47,10 @@ func run() error {
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
 			FrontendAddress string        `conf:"default:https://localhost:3000"`
-			AuthDomain     string        `conf:"default:none,noprint"`
-			AuthAudience   string        `conf:"default:none,noprint"`
+			AuthDomain      string        `conf:"default:none,noprint"`
+			AuthAudience    string        `conf:"default:none,noprint"`
+			AuthM2MClient   string        `conf:"default:none,noprint"`
+			AuthM2MSecret   string        `conf:"default:none,noprint"`
 		}
 		DB struct {
 			User       string `conf:"default:postgres,noprint"`
@@ -136,8 +138,9 @@ func run() error {
 	shutdown := make(chan os.Signal, 1)
 
 	api := http.Server{
-		Addr:         cfg.Web.Address,
-		Handler:      handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress, cfg.Web.AuthAudience, cfg.Web.AuthDomain),
+		Addr: cfg.Web.Address,
+		Handler: handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress, cfg.Web.AuthAudience,
+			cfg.Web.AuthDomain, cfg.Web.AuthM2MClient, cfg.Web.AuthM2MSecret),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		ErrorLog:     discardLog,

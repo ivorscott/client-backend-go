@@ -62,8 +62,13 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	// Call CreateManagment Token (needs Domain, ClientSecret)
-	//token,err := u.auth0.GetManagementToken()
+	//token, err := u.auth0.GetManagementToken()
+	//if err != nil {
+	//	return err
+	//}
+
+	// use management api endpoint to update user's app_metadata
+	// store user_id in app_metadata
 
 	return web.Respond(r.Context(), w, us, http.StatusCreated)
 }

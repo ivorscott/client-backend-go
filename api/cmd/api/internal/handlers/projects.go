@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/ivorscott/devpie-client-backend-go/internal/mid"
 	"github.com/ivorscott/devpie-client-backend-go/internal/project"
 	"log"
@@ -23,7 +24,12 @@ type Projects struct {
 // List gets all Project
 func (p *Projects) List(w http.ResponseWriter, r *http.Request) error {
 	sub := p.auth0.GetAuthTokenSubject(r)
-	p.auth0.GetManagementToken()
+	token, err := p.auth0.GetManagementToken()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(token.AccessToken)
 
 	list, err := project.List(r.Context(), p.repo, sub)
 	if err != nil {

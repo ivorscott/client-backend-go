@@ -7,13 +7,17 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/web"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 type Auth0 struct {
-	Audience string
-	Domain   string
+	Audience  string
+	Domain    string
+	M2MClient string
+	M2MSecret string
 }
 
 type Jwks struct {
@@ -32,6 +36,10 @@ type JSONWebKeys struct {
 type CustomClaims struct {
 	Scope string `json:"scope"`
 	jwt.StandardClaims
+}
+
+type token struct {
+	AccessToken string `json:"access_token"`
 }
 
 // Authenticate middleware verifies the access token sent to the api
@@ -76,7 +84,7 @@ func (a0 *Auth0) Authenticate() web.Middleware {
 }
 
 // CheckScope middleware verifies the Access Token has the correct scope before returning a successful response
-func  (a0 *Auth0) CheckScope(scope, tokenString string) (bool, error) {
+func (a0 *Auth0) CheckScope(scope, tokenString string) (bool, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		cert, err := a0.GetPemCert(token)
 		if err != nil {
@@ -131,23 +139,58 @@ func (a0 *Auth0) GetPemCert(token *jwt.Token) (string, error) {
 	return cert, nil
 }
 
-func (a0 *Auth0) GetManagementToken() {
-	url :=  a0.Domain + "/oauth/token"
-	fmt.Print("===============>>>>>>>>>>>>>>>")
-	fmt.Print(url)
-	//payload := strings.NewReader("grant_type=client_credentials&client_id=%24%7Baccount.clientId%7D&client_secret=YOUR_CLIENT_SECRET&audience=https%3A%2F%2F%24%7Baccount.namespace%7D%2Fapi%2Fv2%2F")
-	//
-	//req, _ := http.NewRequest("POST", url, payload)
-	//
-	//req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	//
-	//res, _ := http.DefaultClient.Do(req)
-	//
-	//defer res.Body.Close()
-	//body, _ := ioutil.ReadAll(res.Body)
-	//
-	//fmt.Println(res)
-	//fmt.Println(string(body))
+func (a0 *Auth0) GetManagementToken() (*token, error) {
+	// get token from database
+
+	// if exists and not expired return it
+
+	// else generate new token
+
+	baseUrl := "https://" + a0.Domain
+	resource := "/oauth/token"
+
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", a0.M2MClient)
+	data.Set("client_secret", a0.M2MSecret)
+	data.Set("audience", a0.Audience)
+
+	u, err := url.ParseRequestURI(baseUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = resource
+	urlStr := u.String()
+
+	req, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	token := token{}
+	err = json.Unmarshal(body, &token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Clean table. Maintain only 1 valid token at a time (DELETE FROM auth0_management;)
+
+	// save generated token
+
+	return &token, nil
 }
 
 func (a0 *Auth0) GetAuthTokenSubject(r *http.Request) string {
