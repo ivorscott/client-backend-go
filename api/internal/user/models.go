@@ -6,12 +6,12 @@ import (
 
 // Users represent user data from the database
 type User struct {
-	ID            string    `db:"id" json:"id" `
-	Auth0ID       string    `db:"auth0id" json:"auth0Id" `
+	ID            string    `db:"user_id" json:"id" `
+	Auth0ID       string    `db:"auth0_id" json:"auth0Id" `
 	Email         string    `db:"email" json:"email"`
-	EmailVerified bool      `db:"emailverified" json:"emailVerified"`
-	FirstName     *string   `db:"firstname" json:"firstName"`
-	LastName      *string   `db:"lastname" json:"lastName"`
+	EmailVerified bool      `db:"email_verified" json:"emailVerified"`
+	FirstName     *string   `db:"first_name" json:"firstName"`
+	LastName      *string   `db:"last_name" json:"lastName"`
 	Picture       *string   `db:"picture" json:"picture"`
 	Locale        *string   `db:"locale" json:"locale"`
 	Created       time.Time `db:"created" json:"created"`

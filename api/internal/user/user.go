@@ -32,18 +32,18 @@ func RetrieveMe(ctx context.Context, repo *database.Repository, sub string) (*Us
 	}
 
 	stmt := repo.SQ.Select(
-		"id",
-		"auth0id",
+		"user_id",
+		"auth0_id",
 		"email",
-		"firstname",
-		"lastname",
-		"emailverified",
+		"first_name",
+		"last_name",
+		"email_verified",
 		"locale",
 		"picture",
 		"created",
 	).From(
 		"users",
-	).Where(sq.Eq{"auth0id": "?"})
+	).Where(sq.Eq{"auth0_id": "?"})
 
 	q, args, err := stmt.ToSql()
 	if err != nil {
@@ -62,7 +62,6 @@ func RetrieveMe(ctx context.Context, repo *database.Repository, sub string) (*Us
 
 // Create adds a new User
 func Create(ctx context.Context, repo *database.Repository, nu NewUser, now time.Time) (*User, error) {
-
 	s := strings.Split(nu.Auth0ID, "|")
 	auth0Id := s[1]
 
@@ -81,12 +80,12 @@ func Create(ctx context.Context, repo *database.Repository, nu NewUser, now time
 	stmt := repo.SQ.Insert(
 		"users",
 	).SetMap(map[string]interface{}{
-		"id":            u.ID,
-		"auth0id":       u.Auth0ID,
+		"user_id":            u.ID,
+		"auth0_id":       u.Auth0ID,
 		"email":         u.Email,
-		"emailverified": u.EmailVerified,
-		"firstname":     u.FirstName,
-		"lastname":      u.LastName,
+		"email_verified": u.EmailVerified,
+		"first_name":     u.FirstName,
+		"last_name":      u.LastName,
 		"picture":       u.Picture,
 		"locale":        u.Locale,
 		"created":       u.Created,
