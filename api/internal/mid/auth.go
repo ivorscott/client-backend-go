@@ -137,17 +137,15 @@ func (a0 *Auth0) GetPemCert(token *jwt.Token) (string, error) {
 	return cert, nil
 }
 
-func (a0 *Auth0) GetAccessTokenSubject(r *http.Request) string {
+func (a0 *Auth0) GetUserBySubject(r *http.Request) string {
 	claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
 	return fmt.Sprintf("%v", claims["sub"])
 }
 
-func (a0 *Auth0) GetUserId(r *http.Request) string {
-	user := r.Context().Value("user")
-	fmt.Printf("This is an authenticated request")
-	fmt.Printf("Claim content:\n")
-	for k, v := range user.(*jwt.Token).Claims.(jwt.MapClaims) {
-		fmt.Printf( "%s :\t%#v\n", k, v)
+func (a0 *Auth0) GetUserById(r *http.Request) string {
+	claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+	if claims["https://client.devpie.io/claims/user_id"] != nil {
+		return fmt.Sprintf("%v",claims["https://client.devpie.io/claims/user_id"])
 	}
 	return ""
 }

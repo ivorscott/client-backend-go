@@ -12,7 +12,6 @@ import (
 type Token struct {
 	ID          string    `db:"ma_token_id" json:"id"`
 	AccessToken string    `db:"token" json:"access_token"`
-	Expiration  string    `db:"expiration" json:"expiration"`
 	Created     time.Time `db:"created" json:"created"`
 }
 

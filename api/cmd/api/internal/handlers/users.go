@@ -29,9 +29,16 @@ type Users struct {
 
 // Retrieve a single user
 func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
-	sub := u.auth0.GetAccessTokenSubject(r)
-	u.auth0.GetUserId(r)
-	us, err := user.RetrieveMe(r.Context(), u.repo, sub)
+	var us *user.User
+	var err error
+
+	id := u.auth0.GetUserById(r)
+
+	if id == "" {
+		us, err = user.RetrieveMeBySubject(r.Context(), u.repo, u.auth0.GetUserBySubject(r))
+	} else {
+		us, err = user.RetrieveMeById(r.Context(), u.repo, id)
+	}
 
 	if err != nil {
 		switch err {
@@ -40,7 +47,7 @@ func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
 		case user.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "looking for user %q", sub)
+			return errors.Wrapf(err, "looking for user %q", id)
 		}
 	}
 
@@ -50,7 +57,7 @@ func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
 // Create a new user
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) error {
 	var t *ma_token.Token
-	sub := u.auth0.GetAccessTokenSubject(r)
+	sub := u.auth0.GetUserBySubject(r)
 
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {

@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -20,11 +19,45 @@ var (
 )
 
 // Retrieve finds the User identified by a given Auth0ID.
-func RetrieveMe(ctx context.Context, repo *database.Repository, sub string) (*User, error) {
+func RetrieveMeById(ctx context.Context, repo *database.Repository, userId string) (*User, error) {
 	var u User
 
-	s := strings.Split(sub, "|")
-	auth0Id := s[1]
+	if _, err := uuid.Parse(userId); err != nil {
+		return nil, ErrInvalidID
+	}
+
+	stmt := repo.SQ.Select(
+		"user_id",
+		"auth0_id",
+		"email",
+		"first_name",
+		"last_name",
+		"email_verified",
+		"locale",
+		"picture",
+		"created",
+	).From(
+		"users",
+	).Where(sq.Eq{"user_id": "?"})
+
+	q, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrapf(err, "building query: %v", args)
+	}
+
+	if err := repo.DB.GetContext(ctx, &u, q, userId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+// Retrieve finds the User identified by a given Auth0ID.
+func RetrieveMeBySubject(ctx context.Context, repo *database.Repository, auth0Id string) (*User, error) {
+	var u User
 
 	stmt := repo.SQ.Select(
 		"user_id",
@@ -56,9 +89,7 @@ func RetrieveMe(ctx context.Context, repo *database.Repository, sub string) (*Us
 }
 
 // Create adds a new User
-func Create(ctx context.Context, repo *database.Repository, nu NewUser, sub string, now time.Time) (*User, error) {
-	s := strings.Split(sub, "|")
-	auth0Id := s[1]
+func Create(ctx context.Context, repo *database.Repository, nu NewUser, auth0Id string, now time.Time) (*User, error) {
 
 	u := User{
 		ID:            uuid.New().String(),

@@ -20,7 +20,6 @@ func Retrieve(ctx context.Context, repo *database.Repository) (*Token, error) {
 	stmt := repo.SQ.Select(
 		"ma_token_id",
 		"token",
-		"expiration",
 		"created",
 	).From(
 		"ma_token",
@@ -46,7 +45,6 @@ func Persist(ctx context.Context, repo *database.Repository, nt *Token, now time
 	t := Token{
 		ID:          uuid.New().String(),
 		AccessToken: nt.AccessToken,
-		Expiration:  nt.Expiration,
 		Created:     now.UTC(),
 	}
 
@@ -55,7 +53,6 @@ func Persist(ctx context.Context, repo *database.Repository, nt *Token, now time
 	).SetMap(map[string]interface{}{
 		"ma_token_id": t.ID,
 		"token": t.AccessToken,
-		"expiration": t.Expiration,
 		"created": t.Created,
 	})
 

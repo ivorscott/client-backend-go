@@ -6,7 +6,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
-	"github.com/ivorscott/devpie-client-backend-go/internal/user"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"time"
@@ -20,15 +19,10 @@ var (
 	ErrEmptyColumnOrder = errors.New("project column order provided was empty")
 )
 
-func Retrieve(ctx context.Context, repo *database.Repository, id string, sub string) (*Project, error) {
+func Retrieve(ctx context.Context, repo *database.Repository, pId string, uId string) (*Project, error) {
 	var p Project
 
-	u, err := user.RetrieveMe(ctx, repo, sub)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := uuid.Parse(id); err != nil {
+	if _, err := uuid.Parse(pId); err != nil {
 		return nil, ErrInvalidID
 	}
 
@@ -48,7 +42,7 @@ func Retrieve(ctx context.Context, repo *database.Repository, id string, sub str
 		return nil, errors.Wrapf(err, "building query: %v", args)
 	}
 
-	if err := repo.DB.GetContext(ctx, &p, q, id, u.ID); err != nil {
+	if err := repo.DB.GetContext(ctx, &p, q, pId, uId); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
@@ -58,16 +52,9 @@ func Retrieve(ctx context.Context, repo *database.Repository, id string, sub str
 	return &p, nil
 }
 
-func List(ctx context.Context, repo *database.Repository, sub string) ([]Project, error) {
+func List(ctx context.Context, repo *database.Repository, uId string) ([]Project, error) {
 	var p Project
 	var ps = make([]Project, 0)
-
-
-
-	u, err := user.RetrieveMe(ctx, repo, sub)
-	if err != nil {
-		return nil, err
-	}
 
 	stmt := repo.SQ.Select(
 		"project_id",
@@ -82,7 +69,7 @@ func List(ctx context.Context, repo *database.Repository, sub string) ([]Project
 		return nil, errors.Wrapf(err, "building query: %v", args)
 	}
 
-	rows, err := repo.DB.QueryContext(ctx, q, u.ID)
+	rows, err := repo.DB.QueryContext(ctx, q, uId)
 	if err != nil {
 		return nil, errors.Wrap(err, "selecting projects")
 	}
@@ -98,18 +85,12 @@ func List(ctx context.Context, repo *database.Repository, sub string) ([]Project
 }
 
 // Create adds a new Project
-func Create(ctx context.Context, repo *database.Repository, np NewProject, sub string, now time.Time) (*Project, error) {
-
-	u, err := user.RetrieveMe(ctx, repo, sub)
-	if err != nil {
-		return nil, err
-	}
-
+func Create(ctx context.Context, repo *database.Repository, np NewProject, uId string, now time.Time) (*Project, error) {
 	p := Project{
 		ID:          uuid.New().String(),
 		Name:        np.Name,
 		Open:        true,
-		UserID:      u.ID,
+		UserID:      uId,
 		ColumnOrder: []string{"column-1", "column-2", "column-3", "column-4"},
 		Created:     now.UTC(),
 	}
@@ -134,8 +115,8 @@ func Create(ctx context.Context, repo *database.Repository, np NewProject, sub s
 
 // Update modifies data about a Project. It will error if the specified ID is
 // invalid or does not reference an existing Project.
-func Update(ctx context.Context, repo *database.Repository, id string, update UpdateProject, sub string) error {
-	p, err := Retrieve(ctx, repo, id, sub)
+func Update(ctx context.Context, repo *database.Repository, pId string, update UpdateProject, uId string) error {
+	p, err := Retrieve(ctx, repo, pId, uId)
 	if err != nil {
 		return err
 	}
@@ -155,7 +136,7 @@ func Update(ctx context.Context, repo *database.Repository, id string, update Up
 		"name":         p.Name,
 		"open":         p.Open,
 		"column_order": p.ColumnOrder,
-	}).Where(sq.Eq{"project_id": id})
+	}).Where(sq.Eq{"project_id": pId,"user_id": uId})
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -166,22 +147,17 @@ func Update(ctx context.Context, repo *database.Repository, id string, update Up
 }
 
 // Delete removes the Project identified by a given ID.
-func Delete(ctx context.Context, repo *database.Repository, id, sub string) error {
-	u, err := user.RetrieveMe(ctx, repo, sub)
-	if err != nil {
-		return err
-	}
-
-	if _, err := uuid.Parse(id); err != nil {
+func Delete(ctx context.Context, repo *database.Repository, pId, uId string) error {
+	if _, err := uuid.Parse(pId); err != nil {
 		return ErrInvalidID
 	}
 
 	stmt := repo.SQ.Delete(
 		"projects",
-	).Where(sq.Eq{"project_id": id, "user_id": u.ID})
+	).Where(sq.Eq{"project_id": pId, "user_id": uId})
 
 	if _, err := stmt.ExecContext(ctx); err != nil {
-		return errors.Wrapf(err, "deleting project %s", id)
+		return errors.Wrapf(err, "deleting project %s", pId)
 	}
 
 	return nil
