@@ -1,10 +1,18 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
+	"github.com/ivorscott/devpie-client-backend-go/internal/ma_token"
 	"github.com/ivorscott/devpie-client-backend-go/internal/mid"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
@@ -19,9 +27,10 @@ type Users struct {
 	auth0 *mid.Auth0
 }
 
-// Retrieve a single User
+// Retrieve a single user
 func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
-	sub := u.auth0.GetAuthTokenSubject(r)
+	sub := u.auth0.GetAccessTokenSubject(r)
+	u.auth0.GetUserId(r)
 	us, err := user.RetrieveMe(r.Context(), u.repo, sub)
 
 	if err != nil {
@@ -38,37 +47,158 @@ func (u *Users) RetrieveMe(w http.ResponseWriter, r *http.Request) error {
 	return web.Respond(r.Context(), w, us, http.StatusOK)
 }
 
-// Create a new User
+// Create a new user
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) error {
-	// (Problem) Auth0's access token doesn't reference our internal user's id in the database,
-	// causing the backend to make an extra request to retrieve the current's id in our system even
-	// when the user's record is not needed for the request.
-	//
-	// (Solution)
-	// Store the management API token in our internal database
+	var t *ma_token.Token
+	sub := u.auth0.GetAccessTokenSubject(r)
 
-	// 1. create a new token if it doesn't exists or expired, store it in database
-	// 3. call Auth0's management API with required credentials and token
-	// 4. update the user.app_metadata in Auth0
-	// (Frequency) Once on user creation
 	var nu user.NewUser
 	if err := web.Decode(r, &nu); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
-	us, err := user.Create(r.Context(), u.repo, nu, time.Now())
+	// create user
+	us, err := user.Create(r.Context(), u.repo, nu, sub, time.Now())
 	if err != nil {
 		return err
 	}
 
-	//token, err := u.auth0.GetManagementToken()
-	//if err != nil {
-	//	return err
-	//}
+	// begin auth0 account update
 
-	// use management api endpoint to update user's app_metadata
-	// store user_id in app_metadata
+	// try getting existing auth0 management api token
+	t, err = ma_token.Retrieve(r.Context(), u.repo)
+	if err == ma_token.ErrNotFound || u.IsExpired(t) {
+		// create new management api token
+		t, err = u.NewManagementToken()
+		if err != nil {
+			return err
+		}
+		// clean table before persisting
+		if err := ma_token.Delete(r.Context(), u.repo); err != nil {
+			return err
+		}
+		// persist management api token
+		if err := ma_token.Persist(r.Context(), u.repo, t, time.Now()); err != nil {
+			return err
+		}
+	}
+
+	// add user_id to app_metadata
+	if err := u.UpdateUserAppMetaData(t, sub, us.ID); err != nil {
+		return err
+	}
 
 	return web.Respond(r.Context(), w, us, http.StatusCreated)
+}
+
+// Update auth0 user account with user_id from database
+func (u *Users) UpdateUserAppMetaData(token *ma_token.Token, auth0Id, userId string) error {
+
+	if _, err := uuid.Parse(userId); err != nil {
+		return user.ErrInvalidID
+	}
+
+	baseUrl := "https://" + u.auth0.Domain
+	resource := "/api/v2/users/" + auth0Id
+
+	uri, err := url.ParseRequestURI(baseUrl)
+	if err != nil {
+		return err
+	}
+
+	uri.Path = resource
+	urlStr := uri.String()
+
+	jsonStr := fmt.Sprintf("{\"app_metadata\": { \"id\": \"%s\" }}", userId)
+
+	req, err := http.NewRequest(http.MethodPatch, urlStr, strings.NewReader(jsonStr))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	return nil
+}
+
+// Create auth0 management token
+func (u *Users) NewManagementToken() (*ma_token.Token, error) {
+	baseUrl := "https://" + u.auth0.Domain
+	resource := "/oauth/token"
+
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", u.auth0.M2MClient)
+	data.Set("client_secret", u.auth0.M2MSecret)
+	data.Set("audience", u.auth0.MAPIAudience)
+
+	uri, err := url.ParseRequestURI(baseUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	uri.Path = resource
+	urlStr := uri.String()
+
+	req, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	token := ma_token.Token{}
+	err = json.Unmarshal(body, &token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &token, nil
+}
+
+// Check management api token for expiration
+func (u *Users) IsExpired(t *ma_token.Token) bool {
+	token, err := jwt.ParseWithClaims(t.AccessToken, &ma_token.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		cert, err := u.auth0.GetPemCert(token)
+		if err != nil {
+			return true, err
+		}
+		return jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+	})
+	if err != nil {
+		u.log.Print("error parsing with claims")
+		return true
+	}
+
+	claims, ok := token.Claims.(*ma_token.CustomClaims)
+	if !ok || !token.Valid {
+		u.log.Print("not ok or not valid")
+		return true
+	}
+
+	if claims.ExpiresAt < time.Now().UTC().Unix() {
+		u.log.Print("token expired")
+		return true
+	}
+
+	return false
 }

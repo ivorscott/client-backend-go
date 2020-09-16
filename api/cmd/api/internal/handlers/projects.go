@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/ivorscott/devpie-client-backend-go/internal/mid"
 	"github.com/ivorscott/devpie-client-backend-go/internal/project"
 	"log"
@@ -16,20 +15,14 @@ import (
 
 // Project holds the application state needed by the handler methods.
 type Projects struct {
-	repo *database.Repository
-	log  *log.Logger
+	repo  *database.Repository
+	log   *log.Logger
 	auth0 *mid.Auth0
 }
 
 // List gets all Project
 func (p *Projects) List(w http.ResponseWriter, r *http.Request) error {
-	sub := p.auth0.GetAuthTokenSubject(r)
-	token, err := p.auth0.GetManagementToken()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(token.AccessToken)
+	sub := p.auth0.GetAccessTokenSubject(r)
 
 	list, err := project.List(r.Context(), p.repo, sub)
 	if err != nil {
@@ -42,7 +35,7 @@ func (p *Projects) List(w http.ResponseWriter, r *http.Request) error {
 // Retrieve a single Project
 func (p *Projects) Retrieve(w http.ResponseWriter, r *http.Request) error {
 	id := chi.URLParam(r, "id")
-	sub := p.auth0.GetAuthTokenSubject(r)
+	sub := p.auth0.GetAccessTokenSubject(r)
 
 	ts, err := project.Retrieve(r.Context(), p.repo, id, sub)
 	if err != nil {
@@ -61,7 +54,7 @@ func (p *Projects) Retrieve(w http.ResponseWriter, r *http.Request) error {
 
 // Create a new Project
 func (p *Projects) Create(w http.ResponseWriter, r *http.Request) error {
-	sub := p.auth0.GetAuthTokenSubject(r)
+	sub := p.auth0.GetAccessTokenSubject(r)
 
 	var np project.NewProject
 	if err := web.Decode(r, &np); err != nil {
@@ -81,7 +74,7 @@ func (p *Projects) Create(w http.ResponseWriter, r *http.Request) error {
 // of the project is part of the request URL.
 func (p *Projects) Update(w http.ResponseWriter, r *http.Request) error {
 	id := chi.URLParam(r, "id")
-	sub := p.auth0.GetAuthTokenSubject(r)
+	sub := p.auth0.GetAccessTokenSubject(r)
 
 	var update project.UpdateProject
 	if err := web.Decode(r, &update); err != nil {
@@ -105,7 +98,7 @@ func (p *Projects) Update(w http.ResponseWriter, r *http.Request) error {
 // Delete removes a single Project identified by an ID in the request URL.
 func (p *Projects) Delete(w http.ResponseWriter, r *http.Request) error {
 	id := chi.URLParam(r, "id")
-	sub := p.auth0.GetAuthTokenSubject(r)
+	sub := p.auth0.GetAccessTokenSubject(r)
 
 	if err := project.Delete(r.Context(), p.repo, id, sub); err != nil {
 		switch err {

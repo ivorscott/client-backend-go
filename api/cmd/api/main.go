@@ -40,17 +40,18 @@ func run() error {
 
 	var cfg struct {
 		Web struct {
-			Address         string        `conf:"default:localhost:4000"`
-			Debug           string        `conf:"default:localhost:6060"`
-			Production      bool          `conf:"default:false"`
-			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:5s"`
-			ShutdownTimeout time.Duration `conf:"default:5s"`
-			FrontendAddress string        `conf:"default:https://localhost:3000"`
-			AuthDomain      string        `conf:"default:none,noprint"`
-			AuthAudience    string        `conf:"default:none,noprint"`
-			AuthM2MClient   string        `conf:"default:none,noprint"`
-			AuthM2MSecret   string        `conf:"default:none,noprint"`
+			Address          string        `conf:"default:localhost:4000"`
+			Debug            string        `conf:"default:localhost:6060"`
+			Production       bool          `conf:"default:false"`
+			ReadTimeout      time.Duration `conf:"default:5s"`
+			WriteTimeout     time.Duration `conf:"default:5s"`
+			ShutdownTimeout  time.Duration `conf:"default:5s"`
+			FrontendAddress  string        `conf:"default:https://localhost:3000"`
+			AuthDomain       string        `conf:"default:none,noprint"`
+			AuthAudience     string        `conf:"default:none,noprint"`
+			AuthM2MClient    string        `conf:"default:none,noprint"`
+			AuthM2MSecret    string        `conf:"default:none,noprint"`
+			AuthMAPIAudience string        `conf:"default:none,noprint"`
 		}
 		DB struct {
 			User       string `conf:"default:postgres,noprint"`
@@ -140,7 +141,7 @@ func run() error {
 	api := http.Server{
 		Addr: cfg.Web.Address,
 		Handler: handlers.API(shutdown, repo, infolog, cfg.Web.FrontendAddress, cfg.Web.AuthAudience,
-			cfg.Web.AuthDomain, cfg.Web.AuthM2MClient, cfg.Web.AuthM2MSecret),
+			cfg.Web.AuthDomain, cfg.Web.AuthM2MClient, cfg.Web.AuthM2MSecret, cfg.Web.AuthMAPIAudience),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		ErrorLog:     discardLog,

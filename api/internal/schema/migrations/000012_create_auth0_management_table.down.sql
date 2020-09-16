@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS auth0_management;
+DROP TABLE IF EXISTS ma_token;

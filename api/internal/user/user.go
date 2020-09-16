@@ -17,7 +17,6 @@ import (
 var (
 	ErrNotFound       = errors.New("user not found")
 	ErrInvalidID      = errors.New("id provided was not a valid UUID")
-	ErrInvalidAuth0ID = errors.New("id provided was not a valid Auth0ID")
 )
 
 // Retrieve finds the User identified by a given Auth0ID.
@@ -26,10 +25,6 @@ func RetrieveMe(ctx context.Context, repo *database.Repository, sub string) (*Us
 
 	s := strings.Split(sub, "|")
 	auth0Id := s[1]
-
-	if auth0Id == "" {
-		return nil, ErrInvalidAuth0ID
-	}
 
 	stmt := repo.SQ.Select(
 		"user_id",
@@ -61,8 +56,8 @@ func RetrieveMe(ctx context.Context, repo *database.Repository, sub string) (*Us
 }
 
 // Create adds a new User
-func Create(ctx context.Context, repo *database.Repository, nu NewUser, now time.Time) (*User, error) {
-	s := strings.Split(nu.Auth0ID, "|")
+func Create(ctx context.Context, repo *database.Repository, nu NewUser, sub string, now time.Time) (*User, error) {
+	s := strings.Split(sub, "|")
 	auth0Id := s[1]
 
 	u := User{
@@ -80,15 +75,15 @@ func Create(ctx context.Context, repo *database.Repository, nu NewUser, now time
 	stmt := repo.SQ.Insert(
 		"users",
 	).SetMap(map[string]interface{}{
-		"user_id":            u.ID,
+		"user_id":        u.ID,
 		"auth0_id":       u.Auth0ID,
-		"email":         u.Email,
+		"email":          u.Email,
 		"email_verified": u.EmailVerified,
 		"first_name":     u.FirstName,
 		"last_name":      u.LastName,
-		"picture":       u.Picture,
-		"locale":        u.Locale,
-		"created":       u.Created,
+		"picture":        u.Picture,
+		"locale":         u.Locale,
+		"created":        u.Created,
 	})
 
 	if _, err := stmt.ExecContext(ctx); err != nil {

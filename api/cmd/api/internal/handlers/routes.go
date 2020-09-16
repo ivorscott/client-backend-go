@@ -10,8 +10,8 @@ import (
 	"os"
 )
 
-func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, FrontendAddress, Auth0Audience, Auth0Domain, Auth0M2MClient, Auth0M2MSecret string) http.Handler {
-	auth0 := &mid.Auth0{Audience: Auth0Audience, Domain: Auth0Domain, M2MClient: Auth0M2MClient, M2MSecret: Auth0M2MSecret}
+func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, FrontendAddress, Auth0Audience, Auth0Domain, Auth0M2MClient, Auth0M2MSecret, AuthMAPIAudience string) http.Handler {
+	auth0 := &mid.Auth0{Audience: Auth0Audience, Domain: Auth0Domain, M2MClient: Auth0M2MClient, M2MSecret: Auth0M2MSecret, MAPIAudience: AuthMAPIAudience}
 	app := web.NewApp(shutdown, log, mid.Logger(log), auth0.Authenticate(), mid.Errors(log), mid.Panics(log))
 
 	cor := cors.New(cors.Options{
