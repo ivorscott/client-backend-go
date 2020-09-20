@@ -100,14 +100,14 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) error {
 }
 
 // Update auth0 user account with user_id from database
-func (u *Users) UpdateUserAppMetaData(token *ma_token.Token, auth0Id, userId string) error {
+func (u *Users) UpdateUserAppMetaData(token *ma_token.Token, aid, userId string) error {
 
 	if _, err := uuid.Parse(userId); err != nil {
 		return user.ErrInvalidID
 	}
 
 	baseUrl := "https://" + u.auth0.Domain
-	resource := "/api/v2/users/" + auth0Id
+	resource := "/api/v2/users/" + aid
 
 	uri, err := url.ParseRequestURI(baseUrl)
 	if err != nil {

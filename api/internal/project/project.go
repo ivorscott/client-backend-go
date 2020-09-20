@@ -19,10 +19,10 @@ var (
 	ErrEmptyColumnOrder = errors.New("project column order provided was empty")
 )
 
-func Retrieve(ctx context.Context, repo *database.Repository, pId string, uId string) (*Project, error) {
+func Retrieve(ctx context.Context, repo *database.Repository, pid string, uid string) (*Project, error) {
 	var p Project
 
-	if _, err := uuid.Parse(pId); err != nil {
+	if _, err := uuid.Parse(pid); err != nil {
 		return nil, ErrInvalidID
 	}
 
@@ -42,7 +42,9 @@ func Retrieve(ctx context.Context, repo *database.Repository, pId string, uId st
 		return nil, errors.Wrapf(err, "building query: %v", args)
 	}
 
-	if err := repo.DB.GetContext(ctx, &p, q, pId, uId); err != nil {
+	row := repo.DB.QueryRowContext(ctx, q, pid, uid)
+	err = row.Scan(&p.ID, &p.Name, &p.Open, &p.UserID, (*pq.StringArray)(&p.ColumnOrder), &p.Created)
+	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
@@ -52,7 +54,7 @@ func Retrieve(ctx context.Context, repo *database.Repository, pId string, uId st
 	return &p, nil
 }
 
-func List(ctx context.Context, repo *database.Repository, uId string) ([]Project, error) {
+func List(ctx context.Context, repo *database.Repository, uid string) ([]Project, error) {
 	var p Project
 	var ps = make([]Project, 0)
 
@@ -69,12 +71,12 @@ func List(ctx context.Context, repo *database.Repository, uId string) ([]Project
 		return nil, errors.Wrapf(err, "building query: %v", args)
 	}
 
-	rows, err := repo.DB.QueryContext(ctx, q, uId)
+	rows, err := repo.DB.QueryContext(ctx, q, uid)
 	if err != nil {
 		return nil, errors.Wrap(err, "selecting projects")
 	}
 	for rows.Next() {
-		err = rows.Scan(&p, &p.Name, &p.Open, &p.UserID, (*pq.StringArray)(&p.ColumnOrder), &p.Created)
+		err = rows.Scan(&p.ID, &p.Name, &p.Open, &p.UserID, (*pq.StringArray)(&p.ColumnOrder), &p.Created)
 		if err != nil {
 			return nil, errors.Wrap(err, "scanning row into Struct")
 		}
@@ -85,12 +87,12 @@ func List(ctx context.Context, repo *database.Repository, uId string) ([]Project
 }
 
 // Create adds a new Project
-func Create(ctx context.Context, repo *database.Repository, np NewProject, uId string, now time.Time) (*Project, error) {
+func Create(ctx context.Context, repo *database.Repository, np NewProject, uid string, now time.Time) (*Project, error) {
 	p := Project{
 		ID:          uuid.New().String(),
 		Name:        np.Name,
 		Open:        true,
-		UserID:      uId,
+		UserID:      uid,
 		ColumnOrder: []string{"column-1", "column-2", "column-3", "column-4"},
 		Created:     now.UTC(),
 	}
@@ -115,8 +117,8 @@ func Create(ctx context.Context, repo *database.Repository, np NewProject, uId s
 
 // Update modifies data about a Project. It will error if the specified ID is
 // invalid or does not reference an existing Project.
-func Update(ctx context.Context, repo *database.Repository, pId string, update UpdateProject, uId string) error {
-	p, err := Retrieve(ctx, repo, pId, uId)
+func Update(ctx context.Context, repo *database.Repository, pid string, update UpdateProject, uid string) error {
+	p, err := Retrieve(ctx, repo, pid, uid)
 	if err != nil {
 		return err
 	}
@@ -136,7 +138,7 @@ func Update(ctx context.Context, repo *database.Repository, pId string, update U
 		"name":         p.Name,
 		"open":         p.Open,
 		"column_order": p.ColumnOrder,
-	}).Where(sq.Eq{"project_id": pId,"user_id": uId})
+	}).Where(sq.Eq{"project_id": pid,"user_id": uid})
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -147,17 +149,17 @@ func Update(ctx context.Context, repo *database.Repository, pId string, update U
 }
 
 // Delete removes the Project identified by a given ID.
-func Delete(ctx context.Context, repo *database.Repository, pId, uId string) error {
-	if _, err := uuid.Parse(pId); err != nil {
+func Delete(ctx context.Context, repo *database.Repository, pid, uid string) error {
+	if _, err := uuid.Parse(pid); err != nil {
 		return ErrInvalidID
 	}
 
 	stmt := repo.SQ.Delete(
 		"projects",
-	).Where(sq.Eq{"project_id": pId, "user_id": uId})
+	).Where(sq.Eq{"project_id": pid, "user_id": uid})
 
 	if _, err := stmt.ExecContext(ctx); err != nil {
-		return errors.Wrapf(err, "deleting project %s", pId)
+		return errors.Wrapf(err, "deleting project %s", pid)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/ivorscott/devpie-client-backend-go/internal/column"
 	"github.com/ivorscott/devpie-client-backend-go/internal/mid"
 	"log"
 	"net/http"
@@ -15,14 +16,16 @@ import (
 
 // Tasks holds the application state needed by the handler methods.
 type Tasks struct {
-	repo *database.Repository
-	log  *log.Logger
+	repo  *database.Repository
+	log   *log.Logger
 	auth0 *mid.Auth0
 }
 
 // List gets all task
 func (t *Tasks) List(w http.ResponseWriter, r *http.Request) error {
-	list, err := task.List(r.Context(), t.repo)
+	pid := chi.URLParam(r, "pid")
+
+	list, err := task.List(r.Context(), t.repo, pid)
 	if err != nil {
 		return err
 	}
@@ -37,9 +40,9 @@ func (t *Tasks) List(w http.ResponseWriter, r *http.Request) error {
 // Retrieve a single Task
 func (t *Tasks) Retrieve(w http.ResponseWriter, r *http.Request) error {
 
-	id := chi.URLParam(r, "id")
+	tid := chi.URLParam(r, "tid")
 
-	ts, err := task.Retrieve(r.Context(), t.repo, id)
+	ts, err := task.Retrieve(r.Context(), t.repo, tid)
 	if err != nil {
 		switch err {
 		case task.ErrNotFound:
@@ -47,7 +50,7 @@ func (t *Tasks) Retrieve(w http.ResponseWriter, r *http.Request) error {
 		case task.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "looking for tasks %q", id)
+			return errors.Wrapf(err, "looking for tasks %q", tid)
 		}
 	}
 
@@ -56,6 +59,8 @@ func (t *Tasks) Retrieve(w http.ResponseWriter, r *http.Request) error {
 
 // Create a new Task
 func (t *Tasks) Create(w http.ResponseWriter, r *http.Request) error {
+	pid := chi.URLParam(r, "pid")
+	cid := chi.URLParam(r, "cid")
 
 	var nt task.NewTask
 	if err := web.Decode(r, &nt); err != nil {
@@ -63,8 +68,20 @@ func (t *Tasks) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	ts, err := task.Create(r.Context(), t.repo, nt, time.Now())
+	ts, err := task.Create(r.Context(), t.repo, nt, pid, time.Now())
 	if err != nil {
+		return err
+	}
+
+	c, err := column.Retrieve(r.Context(), t.repo, pid, cid)
+	if err != nil {
+		return err
+	}
+	uc := column.UpdateColumn{
+		TaskIDS: append(c.TaskIDS, ts.ID),
+	}
+
+	if err := column.Update(r.Context(), t.repo, pid, cid, uc); err != nil {
 		return err
 	}
 
@@ -74,21 +91,22 @@ func (t *Tasks) Create(w http.ResponseWriter, r *http.Request) error {
 // Update decodes the body of a request to update an existing task. The ID
 // of the task is part of the request URL.
 func (t *Tasks) Update(w http.ResponseWriter, r *http.Request) error {
-	id := chi.URLParam(r, "id")
+	pid := chi.URLParam(r, "pid")
+	tid := chi.URLParam(r, "tid")
 
-	var update task.UpdateTask
-	if err := web.Decode(r, &update); err != nil {
+	var ut task.UpdateTask
+	if err := web.Decode(r, &ut); err != nil {
 		return errors.Wrap(err, "decoding task update")
 	}
 
-	if err := task.Update(r.Context(), t.repo, id, update); err != nil {
+	if err := task.Update(r.Context(), t.repo, pid, tid, ut); err != nil {
 		switch err {
 		case task.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
 		case task.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "updating task %q", id)
+			return errors.Wrapf(err, "updating task %q", ut)
 		}
 	}
 
@@ -97,17 +115,41 @@ func (t *Tasks) Update(w http.ResponseWriter, r *http.Request) error {
 
 // Delete removes a single task identified by an ID in the request URL.
 func (t *Tasks) Delete(w http.ResponseWriter, r *http.Request) error {
+	pid := chi.URLParam(r, "pid")
+	cid := chi.URLParam(r, "cid")
+	tid := chi.URLParam(r, "tid")
 
-	id := chi.URLParam(r, "id")
+	c, err := column.Retrieve(r.Context(), t.repo, pid, cid)
+	if err != nil {
+		return err
+	}
 
-	if err := task.Delete(r.Context(), t.repo, id); err != nil {
+	i := SliceIndex(len(c.TaskIDS), func(i int) bool { return c.TaskIDS[i] == tid })
+
+	newTaskIds := append(c.TaskIDS[:i], c.TaskIDS[i+1:]...)
+	uc := column.UpdateColumn{TaskIDS: newTaskIds}
+
+	if err := column.Update(r.Context(), t.repo, pid, cid, uc); err != nil {
+		return err
+	}
+
+	if err := task.Delete(r.Context(), t.repo, pid, tid); err != nil {
 		switch err {
 		case task.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "deleting task %q", id)
+			return errors.Wrapf(err, "deleting task %q", tid)
 		}
 	}
 
 	return web.Respond(r.Context(), w, nil, http.StatusNoContent)
+}
+
+func SliceIndex(limit int, predicate func(i int) bool) int {
+	for i := 0; i < limit; i++ {
+		if predicate(i) {
+			return i
+		}
+	}
+	return -1
 }

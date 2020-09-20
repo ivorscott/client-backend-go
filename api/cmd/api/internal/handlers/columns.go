@@ -22,7 +22,8 @@ type Columns struct {
 
 // List gets all column
 func (c *Columns) List(w http.ResponseWriter, r *http.Request) error {
-	list, err := column.List(r.Context(), c.repo)
+	pid := chi.URLParam(r, "pid")
+	list, err := column.List(r.Context(), c.repo, pid)
 	if err != nil {
 		return err
 	}
@@ -32,9 +33,10 @@ func (c *Columns) List(w http.ResponseWriter, r *http.Request) error {
 
 // Retrieve a single Column
 func (c *Columns) Retrieve(w http.ResponseWriter, r *http.Request) error {
+	pid := chi.URLParam(r, "pid")
 	id := chi.URLParam(r, "id")
 
-	col, err := column.Retrieve(r.Context(), c.repo, id)
+	col, err := column.Retrieve(r.Context(), c.repo, id, pid)
 	if err != nil {
 		switch err {
 		case column.ErrNotFound:
@@ -68,6 +70,7 @@ func (c *Columns) Create(w http.ResponseWriter, r *http.Request) error {
 // Update decodes the body of a request to update an existing column. The ID
 // of the column is part of the request URL.
 func (c *Columns) Update(w http.ResponseWriter, r *http.Request) error {
+	pid := chi.URLParam(r, "pid")
 	id := chi.URLParam(r, "id")
 
 	var update column.UpdateColumn
@@ -75,7 +78,7 @@ func (c *Columns) Update(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "decoding column update")
 	}
 
-	if err := column.Update(r.Context(), c.repo, id, update); err != nil {
+	if err := column.Update(r.Context(), c.repo, pid, id, update); err != nil {
 		switch err {
 		case column.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)

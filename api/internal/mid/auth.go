@@ -144,8 +144,8 @@ func (a0 *Auth0) GetUserBySubject(r *http.Request) string {
 
 func (a0 *Auth0) GetUserById(r *http.Request) string {
 	claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
-	if claims["https://client.devpie.io/claims/user_id"] != nil {
-		return fmt.Sprintf("%v",claims["https://client.devpie.io/claims/user_id"])
+	if _, ok := claims["https://client.devpie.io/claims/user_id"]; !ok {
+		return ""
 	}
-	return ""
+	return fmt.Sprintf("%v", claims["https://client.devpie.io/claims/user_id"])
 }

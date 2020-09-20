@@ -19,10 +19,10 @@ var (
 )
 
 // Retrieve finds the User identified by a given Auth0ID.
-func RetrieveMeById(ctx context.Context, repo *database.Repository, userId string) (*User, error) {
+func RetrieveMeById(ctx context.Context, repo *database.Repository, uid string) (*User, error) {
 	var u User
 
-	if _, err := uuid.Parse(userId); err != nil {
+	if _, err := uuid.Parse(uid); err != nil {
 		return nil, ErrInvalidID
 	}
 
@@ -45,7 +45,7 @@ func RetrieveMeById(ctx context.Context, repo *database.Repository, userId strin
 		return nil, errors.Wrapf(err, "building query: %v", args)
 	}
 
-	if err := repo.DB.GetContext(ctx, &u, q, userId); err != nil {
+	if err := repo.DB.GetContext(ctx, &u, q, uid); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
@@ -56,7 +56,7 @@ func RetrieveMeById(ctx context.Context, repo *database.Repository, userId strin
 }
 
 // Retrieve finds the User identified by a given Auth0ID.
-func RetrieveMeBySubject(ctx context.Context, repo *database.Repository, auth0Id string) (*User, error) {
+func RetrieveMeBySubject(ctx context.Context, repo *database.Repository, aid string) (*User, error) {
 	var u User
 
 	stmt := repo.SQ.Select(
@@ -78,7 +78,7 @@ func RetrieveMeBySubject(ctx context.Context, repo *database.Repository, auth0Id
 		return nil, errors.Wrapf(err, "building query: %v", args)
 	}
 
-	if err := repo.DB.GetContext(ctx, &u, q, auth0Id); err != nil {
+	if err := repo.DB.GetContext(ctx, &u, q, aid); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
@@ -89,11 +89,11 @@ func RetrieveMeBySubject(ctx context.Context, repo *database.Repository, auth0Id
 }
 
 // Create adds a new User
-func Create(ctx context.Context, repo *database.Repository, nu NewUser, auth0Id string, now time.Time) (*User, error) {
+func Create(ctx context.Context, repo *database.Repository, nu NewUser, aid string, now time.Time) (*User, error) {
 
 	u := User{
 		ID:            uuid.New().String(),
-		Auth0ID:       auth0Id,
+		Auth0ID:       aid,
 		Email:         nu.Email,
 		EmailVerified: nu.EmailVerified,
 		FirstName:     nu.FirstName,

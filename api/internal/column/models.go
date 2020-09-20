@@ -5,23 +5,21 @@ import (
 )
 
 type Column struct {
-	ID        string    `db:"column_id" json:"id"`
-	ProjectID string    `db:"project_id" json:"projectId"`
-	Title     string    `db:"title" json:"title"`
-	Column    string    `db:"column" json:"column"`
-	TaskIDS   []string  `db:"task_ids" json:"taskIds"`
-	Created   time.Time `db:"created" json:"created"`
+	ID         string    `db:"column_id" json:"id"`
+	Title      string    `db:"title" json:"title"`
+	ColumnName string    `db:"column_name" json:"columnName"`
+	TaskIDS    []string  `db:"task_ids" json:"taskIds"`
+	ProjectID  string    `db:"project_id" json:"projectId"`
+	Created    time.Time `db:"created" json:"created"`
 }
 
 type NewColumn struct {
-	ProjectID string   `json:"projectId"`
-	Title     string   `json:"title"`
-	Column    string   `json:"column"`
-	TaskIDS   []string `json:"taskIds"`
+	Title      string `json:"title"`
+	ColumnName string `json:"columnName"`
+	ProjectID  string `json:"projectId"`
 }
 
 type UpdateColumn struct {
-	Title   string   `json:"title"`
-	Column  string   `json:"column"`
-	TaskIDS []string `json:"taskIds"`
+	Title      *string   `json:"title"`
+	TaskIDS    []string `json:"taskIds"`
 }
