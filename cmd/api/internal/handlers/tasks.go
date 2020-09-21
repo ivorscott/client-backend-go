@@ -106,7 +106,7 @@ func (t *Tasks) Update(w http.ResponseWriter, r *http.Request) error {
 		case task.ErrInvalidID:
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
-			return errors.Wrapf(err, "updating task %q", ut)
+			return errors.Wrapf(err, "updating task %v", ut)
 		}
 	}
 
@@ -178,7 +178,7 @@ func (t *Tasks) Move(w http.ResponseWriter, r *http.Request) error {
 		switch err {
 		case task.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
-		case task.ErrInvalidID:
+		case task.ErrInvalidID:git
 			return web.NewRequestError(err, http.StatusBadRequest)
 		default:
 			return errors.Wrapf(err, "updating column taskIds from:%q, to:%q", mt.From, mt.To)
