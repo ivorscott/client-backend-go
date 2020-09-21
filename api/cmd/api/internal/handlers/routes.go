@@ -36,8 +36,8 @@ func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, Fr
 	app.Handle(http.MethodGet, "/v1/health", h.Health)
 
 	u := Users{repo: repo, log: log, auth0: auth0}
-	c := Columns{repo: repo, log: log, auth0: auth0}
 	t := Tasks{repo: repo, log: log, auth0: auth0}
+	c := Columns{repo: repo, log: log, auth0: auth0}
 	p := Projects{repo: repo, log: log, auth0: auth0}
 
 	app.Handle(http.MethodPost, "/v1/users", u.Create)
@@ -51,6 +51,7 @@ func API(shutdown chan os.Signal, repo *database.Repository, log *log.Logger, Fr
 	app.Handle(http.MethodGet, "/v1/projects/{pid}/tasks", t.List)
 	app.Handle(http.MethodPost, "/v1/projects/{pid}/columns/{cid}/tasks", t.Create)
 	app.Handle(http.MethodPatch, "/v1/projects/{pid}/tasks/{tid}", t.Update)
+	app.Handle(http.MethodPatch, "/v1/projects/{pid}/tasks/{tid}/move", t.Move)
 	app.Handle(http.MethodDelete, "/v1/projects/{pid}/columns/{cid}/tasks/{tid}", t.Delete)
 
 	return cor.Handler(app)

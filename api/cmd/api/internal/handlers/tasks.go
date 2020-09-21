@@ -145,6 +145,49 @@ func (t *Tasks) Delete(w http.ResponseWriter, r *http.Request) error {
 	return web.Respond(r.Context(), w, nil, http.StatusNoContent)
 }
 
+func (t *Tasks) Move(w http.ResponseWriter, r *http.Request) error {
+	pid := chi.URLParam(r, "pid")
+	tid := chi.URLParam(r, "tid")
+
+	var mt task.MoveTask
+	if err := web.Decode(r, &mt); err != nil {
+		return errors.Wrap(err, "decoding task move")
+	}
+
+	cF, err := column.Retrieve(r.Context(), t.repo, pid, mt.From)
+	if err != nil {
+		return err
+	}
+
+	cT, err := column.Retrieve(r.Context(), t.repo, pid, mt.To)
+	if err != nil {
+		return err
+	}
+
+	i := SliceIndex(len(cF.TaskIDS), func(i int) bool { return cF.TaskIDS[i] == tid })
+
+	newFromTaskIds := append(cF.TaskIDS[:i], cF.TaskIDS[i+1:]...)
+	foc := column.UpdateColumn{TaskIDS: newFromTaskIds}
+
+	newToTaskIds := append(cT.TaskIDS, tid)
+	toc := column.UpdateColumn{TaskIDS: newToTaskIds}
+
+	err = column.Update(r.Context(), t.repo, pid, mt.From, foc)
+	err = column.Update(r.Context(), t.repo, pid, mt.To, toc)
+	if err != nil {
+		switch err {
+		case task.ErrNotFound:
+			return web.NewRequestError(err, http.StatusNotFound)
+		case task.ErrInvalidID:
+			return web.NewRequestError(err, http.StatusBadRequest)
+		default:
+			return errors.Wrapf(err, "updating column taskIds from:%q, to:%q", mt.From, mt.To)
+		}
+	}
+
+	return web.Respond(r.Context(), w, nil, http.StatusNoContent)
+}
+
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
 		if predicate(i) {

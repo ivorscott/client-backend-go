@@ -21,3 +21,9 @@ type UpdateTask struct {
 	Title   *string `json:"title" validate:"required"`
 	Content *string `json:"content"`
 }
+
+type MoveTask struct {
+	To string	`json:"to"`
+	From string	`json:"from"`
+	TaskIds []string `json:"taskIds"`
+}
