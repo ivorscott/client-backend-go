@@ -17,7 +17,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./api/internal/schema/seeds:/seed
+      - ./internal/schema/seeds:/seed
       - data:/var/lib/postgresql/data
     networks:
       - postgres-net
@@ -33,7 +33,7 @@ services:
     image: migrate/migrate
     entrypoint: migrate create -ext sql -dir /migrations -seq
     volumes:
-      - ./api/internal/schema/migrations:/migrations
+      - ./internal/schema/migrations:/migrations
     networks:
       - postgres-net
 
@@ -41,7 +41,7 @@ services:
     image: migrate/migrate
     command: -path /migrations -database $DB_URL version
     volumes:
-      - ./api/internal/schema/migrations:/migrations
+      - ./internal/schema/migrations:/migrations
     networks:
       - postgres-net
 
@@ -49,7 +49,7 @@ services:
     image: migrate/migrate
     entrypoint: migrate -path /migrations -verbose -database $DB_URL up
     volumes:
-      - ./api/internal/schema/migrations:/migrations
+      - ./internal/schema/migrations:/migrations
     networks:
       - postgres-net
 
@@ -57,7 +57,7 @@ services:
     image: migrate/migrate
     entrypoint: migrate -path /migrations -verbose -database $DB_URL down
     volumes:
-      - ./api/internal/schema/migrations:/migrations
+      - ./internal/schema/migrations:/migrations
     networks:
       - postgres-net
 
@@ -66,6 +66,6 @@ services:
     image: migrate/migrate
     entrypoint: migrate -path /migrations -verbose -database $DB_URL force
     volumes:
-      - ./api/internal/schema/migrations:/migrations
+      - ./internal/schema/migrations:/migrations
     networks:
       - postgres-net

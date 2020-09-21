@@ -3,7 +3,7 @@ version: "2.4"
 services:
   api:
     build:
-      context: ./api
+      context: .
       target: dev
     environment:
       CGO_ENABLED: 0
@@ -25,7 +25,7 @@ services:
       API_WEB_AWS_SECRET: $API_WEB_AWS_SECRET
       API_WB_AWS_REGION: $API_WB_AWS_REGION
     volumes:
-      - ./api:/api
+      - .:/api
     networks:
       - postgres-net
     depends_on:

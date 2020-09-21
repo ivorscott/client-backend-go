@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   api:
-    image: devpies/gdr-api
+    image: devpies/client-api
     secrets:
       - postgres_db
       - postgres_user
@@ -15,14 +15,14 @@ services:
       API_WEB_READ_TIMEOUT: 7s
       API_WEB_WRITE_TIMEOUT: 7s
       API_WEB_SHUTDOWN_TIMEOUT: 7s
-      API_WEB_FRONTEND_ADDRESS: https://gdr.ivorscott.com
+      API_WEB_FRONTEND_ADDRESS: https://client.devpie.io
       POSTGRES_DB: /run/secrets/postgres_db
       POSTGRES_USER: /run/secrets/postgres_user
       POSTGRES_HOST: /run/secrets/postgres_host
       POSTGRES_PASSWORD: /run/secrets/postgres_passwd
     deploy:
       labels:
-        - traefik.frontend.rule=Host:api.gdr.ivorscott.com
+        - traefik.frontend.rule=Host:api.devpie.io
         - traefik.enable=true
         - traefik.port=4000
         - traefik.tags=traefik-public
@@ -35,23 +35,6 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-    networks:
-      - traefik-public
-
-  client:
-    image: devpies/gdr-client
-    deploy:
-      labels:
-        - traefik.frontend.rule=Host:gdr.ivorscott.com
-        - traefik.enable=true
-        - traefik.port=80
-        - traefik.tags=traefik-public
-        - traefik.docker.network=traefik-public
-        # Traefik service that listens to HTTP
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        # Traefik service that listens to HTTPS
-        - traefik.webservice.frontend.entryPoints=https
     networks:
       - traefik-public
 

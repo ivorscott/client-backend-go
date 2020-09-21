@@ -5,49 +5,41 @@
 include .env
 
 build: 
-	@echo "\n[ building production api images ]"
-
-	docker build --target prod \
-	--build-arg version=v1 \
-	--build-arg backend=${REACT_APP_BACKEND} \
-	--tag devpies/gdr-client ./client
-
-	docker build --target prod \
-	--tag devpies/gdr-api ./api
+	@echo "\n[ building production image ]"
+	docker build --target prod --tag devpies/client-api ./api
 
 login: 
 	@echo "\n[ logging into private registry ]"
 	cat ./secrets/registry_pass | docker login --username `cat ./secrets/registry_user` --password-stdin
 
 publish:
-	@echo "\n[ publishing production grade images ]"
-	docker push devpies/gdr-api
-	docker push devpies/gdr-client
+	@echo "\n[ publishing production grade image ]"
+	docker push devpies/client-api
 
 deploy:
 	@echo "\n[ deploying production stack ]"
 	@cat ./startup
-	@docker stack deploy -c docker-stack.yml --with-registry-auth gdr
+	@docker stack deploy -c docker-stack.yml --with-registry-auth devpie
 
 metrics: 
 	@echo "\n[ enabling docker engine metrics ]"
-	./init/enable-monitoring.sh
+	./deploy/enable-monitoring.sh
 
 secrets: 
 	@echo "\n[ creating swarm secrets ]"
-	./init/create-secrets.sh
+	./deploy/create-secrets.sh
 
 server:
 	@echo "\n[ creating server ]"
-	./init/create-server.sh
+	./deploy/create-server.sh
 
 server-d:
 	@echo "\n[ destroying server ]"
-	./init/destroy-server.sh
+	./deploy/destroy-server.sh
 
 swarm:
 	@echo "\n[ create single node swarm ]"
-	./init/create-swarm.sh
+	./deploy/create-swarm.sh
 
 .PHONY: build 
 .PHONY: login

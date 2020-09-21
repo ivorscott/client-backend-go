@@ -7,7 +7,7 @@ ENV CGO_ENABLED=0
 
 # 3. WORKDIR sets the working directory for any subsequent COPY, CMD, or RUN instructions
 # Set the working directory to /api
-WORKDIR /api
+WORKDIR /
 
 # 4. Extend the base stage and create a new stage named dev
 FROM base as dev
@@ -57,7 +57,7 @@ FROM alpine:3.11.5 as prod
 
 # 18. Copy the build into the prod stage and leave everything else behind
 COPY --from=trivy result secure
-COPY --from=build-stage /api/main main
+COPY --from=build-stage main main
 
 # 19. Provide meta data about the port the container must expose
 EXPOSE 4000

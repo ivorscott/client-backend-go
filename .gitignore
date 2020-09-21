@@ -1,8 +1,8 @@
 **/*/.vscode/settings.json
 .vscode/settings.json
-/secrets
+/deploy/secrets
 /api/__debug_bin
-/api/tls/*
+/tls/*
 .env
 main
 c.out
