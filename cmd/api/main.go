@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ivorscott/devpie-client-backend-go/dockersecrets"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 	"github.com/ivorscott/devpie-client-backend-go/cmd/api/internal/handlers"
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/conf"
 	"github.com/ivorscott/devpie-client-backend-go/internal/platform/database"
-	"github.com/ivorscott/devpie-client-backend-go/pkg/secrets"
 	"github.com/pkg/errors"
 )
 
@@ -78,7 +78,7 @@ func run() error {
 	// Enabled Docker Secrets
 
 	if cfg.Web.Production {
-		dockerSecrets, err := secrets.NewDockerSecrets()
+		dockerSecrets, err := dockersecrets.NewDockerSecrets()
 		if err != nil {
 			log.Fatalf("error : retrieving docker secrets failed : %v", err)
 		}

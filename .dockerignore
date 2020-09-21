@@ -1,0 +1,12 @@
+.env
+.docker-*
+makefile
+.gitignore
+daemon.json
+deployment
+documentation
+dockersecrets
+settings
+tls
+startup
+README.md

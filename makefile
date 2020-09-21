@@ -6,11 +6,11 @@ include .env
 
 build: 
 	@echo "\n[ building production image ]"
-	docker build --target prod --tag devpies/client-api ./api
+	docker build --target prod --tag devpies/client-api .
 
 login: 
 	@echo "\n[ logging into private registry ]"
-	cat ./secrets/registry_pass | docker login --username `cat ./secrets/registry_user` --password-stdin
+	cat ./deployment/secrets/registry_pass | docker login --username `cat ./deployment/secrets/registry_user` --password-stdin
 
 publish:
 	@echo "\n[ publishing production grade image ]"
@@ -23,23 +23,23 @@ deploy:
 
 metrics: 
 	@echo "\n[ enabling docker engine metrics ]"
-	./deploy/enable-monitoring.sh
+	./deployment/enable-monitoring.sh
 
 secrets: 
 	@echo "\n[ creating swarm secrets ]"
-	./deploy/create-secrets.sh
+	./deployment/create-secrets.sh
 
 server:
 	@echo "\n[ creating server ]"
-	./deploy/create-server.sh
+	./deployment/create-server.sh
 
 server-d:
 	@echo "\n[ destroying server ]"
-	./deploy/destroy-server.sh
+	./deployment/destroy-server.sh
 
 swarm:
 	@echo "\n[ create single node swarm ]"
-	./deploy/create-swarm.sh
+	./deployment/create-swarm.sh
 
 .PHONY: build 
 .PHONY: login

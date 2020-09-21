@@ -3,6 +3,7 @@
 /deploy/secrets
 /api/__debug_bin
 /tls/*
+.idea
 .env
 main
 c.out

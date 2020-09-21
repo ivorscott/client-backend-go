@@ -1,37 +1,41 @@
-# DevPie client backend
+# DevPie Client Backend
 
 ### Usage
 
 1 - Copy .env.sample and rename it to .env
 
-The contents of .env should look like this:
+Include the necessary `API_WEB_*` secrets from Auth0.
 
 ```bash
-# ENVIRONMENT VARIABLES
+# USAGE WITH ENV VARS
+# 1. env $(cat .env | grep -v "#" | xargs)
+# 2. go run ./cmd/api
 
 API_WEB_AUTH_DOMAIN=
 API_WEB_AUTH_AUDIENCE=
+API_WEB_AUTH_MAPI_AUDIENCE=
+API_WEB_AUTH_M_2_M_CLIENT=
+API_WEB_AUTH_M_2_M_SECRET=
 
 API_PORT=4000
 PPROF_PORT=6060
 CLIENT_PORT=3000
 
-DB_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
-
-REACT_APP_BACKEND=http://localhost:4000/v1
+REACT_APP_BACKEND=https://localhost:4000/v1
 API_WEB_FRONTEND_ADDRESS=https://localhost:3000
+
+DB_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
 ```
 
 2 - Unblock port 5432 for postgres
 
 3 - Create self-signed certificates
 
-The next set of commands moves generated certificates to the `./api/tls/` directory.
 
 ```makefile
-mkdir -p ./api/tls
+mkdir -p ./tls
 go run $(go env GOROOT)/src/crypto/tls/generate_cert.go --rsa-bits=2048 --host=localhost
-mv *.pem ./api/tls
+mv *.pem ./tls
 ```
 
 4 - Setup up the Postgres container
@@ -42,15 +46,23 @@ Run the database in the background.
 docker-compose up -d db
 ```
 
-#### Create your first migration
+#### Run the API container with live reload enabled
 
-Make a migration to create the products table.
+```
+docker-compose up api
+```
+
+### Migration Workflow
+
+Imagine an API that serves products. 
+
+#### Make a migration to create the products table
 
 ```makefile
 docker-compose run migration create_products_table
 ```
 
-Add sql to both `up` & `down` migrations files found at: `./api/internal/schema/migrations/`.
+Add sql to both `up` & `down` migrations files found at: `./internal/schema/migrations/`.
 
 **Up**
 
@@ -74,7 +86,7 @@ CREATE TABLE products (
 DROP TABLE IF EXISTS products;
 ```
 
-#### Create your second migration
+#### Creating a second migration
 
 Make another migration to add tags to products:
 
@@ -115,18 +127,20 @@ docker-compose run version
 
 [Learn more about my go-migrate Postgres helper](https://github.com/ivorscott/go-migrate-postgres-helper)
 
-#### Seeding the database
+### Seeding the database (optional)
 
 Create a seed file of the appropriate name matching the table name you wish to seed.
 
+For example:
+
 ```makefile
-touch ./api/internal/schema/seeds/products.sql
+touch ./internal/schema/seeds/products.sql
 ```
 
-This adds an empty products.sql seed file found under `./api/internal/schema/seeds`. Add the following sql content:
+This adds an empty products.sql seed file found under `./internal/schema/seeds`. Add the following sql content:
 
 ```sql
--- ./api/internal/schema/seeds/products.sql
+-- ./internal/schema/seeds/products.sql
 
 INSERT INTO products (id, name, price, description, created) VALUES
 ('cbef5139-323f-48b8-b911-dc9be7d0bc07','Xbox One X', 499.00, 'Eighth-generation home video game console developed by Microsoft.','2019-01-01 00:00:01.000001+00'),
@@ -149,96 +163,32 @@ Enter the database and examine its state.
 docker-compose run debug-db
 ```
 
-![Minion](docs/compose-db-debug.png)
+![Minion](documentation/compose-db-debug.png)
 
 If the database container is removed, you don't need to start from scratch. A named volume was created to persist the data. Simply run the container in the background again.
 
-5 - Run the api and client containers
-
-#### Run the Go API container with live reload enabled
-
-`docker-compose up api`
-
-#### Run the React TypeScript app container
-
-`docker-compose up client`
-
-![Minion](docs/run.png)
-
-or `docker-compose up api client`
-
-First, navigate to the API in the browser at: <https://localhost:4000/v1/products>.
-
-Then navigate to the client app at: <https://localhost:3000> in a separate tab.
-This approach to development uses containers entirely.
-
-**Note:**
+##** Warning **
 
 To replicate the production environment as much as possible locally, we use self-signed certificates.
 
 In your browser, you may see a warning and need to click a link to proceed to the requested page. This is common when using self-signed certificates.
 
-6 - **Optional Idiomatic Go development** (container free Go API)
+## Idiomatic Go Development (without a container)
 
-Another approach is to containerize only the client and database. Work with the API in an idiomatic fashion. This means without a container and with live reloading disabled. To configure the API, use command line flags or export environment variables.
-
-```makefile
-# export environment variables individually
-export API_DB_DISABLE_TLS=true
-export API_WEB_AUTH_DOMAIN=<INSERT-VALUE-HERE>
-export API_WEB_AUTH_AUDIENCE=<INSERT-VALUE-HERE>
-
-cd api
-go run ./cmd/api
-
-# or use cli flags
-# go run ./cmd/api --db-disable-tls=true --web-auth-domain=<INSERT-VALUE-HERE> --web-auth-audience=<INSERT-VALUE-HERE>
-```
-
-### Try it in Postman
-
-**List products**
-
-GET <https://localhost:4000/v1/products>
-
-**Retrieve one product**
-
-GET <https://localhost:4000/v1/products/:id>
-
-**Create a product**
-
-POST <https://localhost:4000/v1/products>
-
-```
-{
-	"name": "Game Cube",
-	"price": 74,
-	"description": "The GameCube is the first Nintendo console to use optical discs as its primary storage medium.",
-	"tags": null
-}
-```
-
-**Update a product**
-
-PUT <https://localhost:4000/v1/products/:id>
-
-```
-{
-	"name": "Nintendo Rich!"
-}
-```
-
-**Delete a product**
-
-DELETE <https://localhost:4000/v1/products/:id>
-
-#### Commands
+Another approach is to containerize only the database. Work with the API in an idiomatic fashion. This means without a container and with live reloading `disabled`. To configure the API, use command line flags or export environment variables.
 
 ```makefile
+# USING ENV VARS
+# export env $(cat .env | grep -v "#" | xargs)
+# go run ./cmd/api
 
+# USING FLAGS
+# go run ./cmd/api --db-disable-tls=true --web-auth-domain=<INSERT-VALUE-HERE> --web-auth-audience=<INSERT-VALUE-HERE> --web-auth-m-2-m-client=<INSERT-VALUE-HERE> --web-auth-m-2-m-secret=<INSERT-VALUE-HERE> --web-auth-mapi-audience=<INSERT-VALUE-HERE>
+```
+#### Development Commands
+
+```makefile
 docker-compose up api # develop api with live reload
-
-docker-compose up client # develop client react app
 
 docker-compose up -d db # start the database in the background
 
@@ -255,14 +205,14 @@ docker-compose run down <number> # migrate down a number (optional number, defau
 docker-compose run force <version> # Set version but don't run migration (ignores dirty state)
 
 docker-compose exec db psql postgres postgres -f /seed/<name>.sql  # insert seed file to database
-
-make build # build production ready images
+```
+#### Build and Deploy Steps (in order)
+```
+make build # build production ready image
 
 make login # login to Docker Hub
 
 make publish # publish to Docker Hub
-
-make deploy # perform "docker stack deploy"
 
 make metrics # enable Docker engine metrics
 
@@ -270,40 +220,7 @@ make secrets # create Docker swarm secrets
 
 make server # create digital ocean server
 
-make server-d # destroy digital ocean server
-
 make swarm # create single node Swarm cluster
-```
 
-#### Using the debugger in VSCode
-
-If you wish to debug with Delve you can do this in a separate container instance on port 8888 automatically.
-
-```makefile
-docker-compose up debug-api
-```
-
-Set a break point on a route handler. Click 'Launch remote' then visit the route in the browser.
-
-[Read previous tutorial about delve debugging](https://blog.ivorscott.com/ultimate-go-react-development-setup-with-docker#delve-debugging-a-go-api)
-
-#### VSCode launch.json
-
-```
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch remote",
-      "type": "go",
-      "request": "attach",
-      "mode": "remote",
-      "cwd": "${workspaceFolder}/api",
-      "remotePath": "/api",
-      "port": 2345,
-      "showLog": true,
-      "trace": "verbose"
-    }
-  ]
-}
+make deploy # perform "docker stack deploy"
 ```
