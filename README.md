@@ -1,16 +1,12 @@
 # DevPie Client Backend
 
-### Usage
+### Usage in 5 steps
 
 1 - Copy .env.sample and rename it to .env
 
 Include the necessary `API_WEB_*` secrets from Auth0.
 
 ```bash
-# USAGE WITH ENV VARS
-# 1. env $(cat .env | grep -v "#" | xargs)
-# 2. go run ./cmd/api
-
 API_WEB_AUTH_DOMAIN=
 API_WEB_AUTH_AUDIENCE=
 API_WEB_AUTH_MAPI_AUDIENCE=
@@ -46,13 +42,13 @@ Run the database in the background.
 docker-compose up -d db
 ```
 
-#### Run the API container with live reload enabled
+5 - Run the API with live reload enabled
 
 ```
 docker-compose up api
 ```
 
-### Migration Workflow
+### The Migration and Seeding Workflow
 
 Imagine an API that serves products. 
 
@@ -125,8 +121,6 @@ Display which version you have selected. Expect it two print `2` since you creat
 docker-compose run version
 ```
 
-[Learn more about my go-migrate Postgres helper](https://github.com/ivorscott/go-migrate-postgres-helper)
-
 ### Seeding the database (optional)
 
 Create a seed file of the appropriate name matching the table name you wish to seed.
@@ -167,23 +161,23 @@ docker-compose run debug-db
 
 If the database container is removed, you don't need to start from scratch. A named volume was created to persist the data. Simply run the container in the background again.
 
-##** Warning **
+### Warning
 
 To replicate the production environment as much as possible locally, we use self-signed certificates.
 
 In your browser, you may see a warning and need to click a link to proceed to the requested page. This is common when using self-signed certificates.
 
-## Idiomatic Go Development (without a container)
+### Idiomatic Go Development (without a container)
 
 Another approach is to containerize only the database. Work with the API in an idiomatic fashion. This means without a container and with live reloading `disabled`. To configure the API, use command line flags or export environment variables.
 
 ```makefile
 # USING ENV VARS
-# export env $(cat .env | grep -v "#" | xargs)
-# go run ./cmd/api
+export env $(cat .env | grep -v "#" | xargs)
+go run ./cmd/api
 
 # USING FLAGS
-# go run ./cmd/api --db-disable-tls=true --web-auth-domain=<INSERT-VALUE-HERE> --web-auth-audience=<INSERT-VALUE-HERE> --web-auth-m-2-m-client=<INSERT-VALUE-HERE> --web-auth-m-2-m-secret=<INSERT-VALUE-HERE> --web-auth-mapi-audience=<INSERT-VALUE-HERE>
+go run ./cmd/api --db-disable-tls=true --web-auth-domain=<INSERT-VALUE-HERE> --web-auth-audience=<INSERT-VALUE-HERE> --web-auth-m-2-m-client=<INSERT-VALUE-HERE> --web-auth-m-2-m-secret=<INSERT-VALUE-HERE> --web-auth-mapi-audience=<INSERT-VALUE-HERE>
 ```
 #### Development Commands
 
@@ -207,7 +201,7 @@ docker-compose run force <version> # Set version but don't run migration (ignore
 docker-compose exec db psql postgres postgres -f /seed/<name>.sql  # insert seed file to database
 ```
 #### Build and Deploy Steps (in order)
-```
+```makefile
 make build # build production ready image
 
 make login # login to Docker Hub
