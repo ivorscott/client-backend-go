@@ -1,5 +1,7 @@
 # DevPie Client Backend
 
+Making public the project I've been streaming on Twitch. twitch.tv/ivorscott
+
 ### Usage in 5 steps
 
 1 - Copy .env.sample and rename it to .env
