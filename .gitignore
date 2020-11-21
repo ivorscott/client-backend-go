@@ -1,6 +1,6 @@
 **/*/.vscode/settings.json
 .vscode/settings.json
-/deploy/secrets
+/deployment/secrets
 /api/__debug_bin
 /tls/*
 .idea

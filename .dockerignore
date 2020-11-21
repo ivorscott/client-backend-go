@@ -5,7 +5,6 @@ makefile
 daemon.json
 deployment
 documentation
-dockersecrets
 settings
 tls
 startup

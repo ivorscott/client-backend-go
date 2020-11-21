@@ -1,4 +1,4 @@
-package dockersecrets
+package secrets
 
 import (
 	"fmt"
