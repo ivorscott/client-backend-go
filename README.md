@@ -1,4 +1,4 @@
-# DevPie Client Backend
+# Client Backend
 
 Making public the project I've been streaming on Twitch. twitch.tv/ivorscott
 
